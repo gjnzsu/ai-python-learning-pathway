@@ -4,9 +4,9 @@
 
 ## 当前进度
 
-- 当前课程：第 1 周，第 1 课
+- 已完成课程：第 1 周，第 2 课
 - 当前项目：日志分析 CLI
-- 下一步：阅读 `lessons/week-01/lesson-01.md`，完成第一个 RED → GREEN 循环
+- 下一步：第 3 课，条件判断、异常与日志过滤
 
 ## 目录
 
@@ -25,5 +25,4 @@ cd projects/log-analyzer
 python -m unittest discover -s tests -v
 ```
 
-首次运行应当看到一个有意保留的失败测试。按照第一课讲义完成实现后，再次运行测试，目标是让它变绿。
-
+第二课已完成，当前共有 5 个测试通过。课程讲义位于 `lessons/week-01/lesson-02.md`。

@@ -13,3 +13,14 @@ def parse_log_line(line: str) -> dict[str, str]:
         "level": level,
         "message": message,
     }
+
+
+def count_log_levels(line_array: list[str]) -> dict[str, int]:
+
+    log_level_count: dict[str, int] = {}
+
+    for line in line_array:
+        level = parse_log_line(line)["level"]
+        log_level_count[level] = log_level_count.get(level, 0) + 1
+
+    return log_level_count

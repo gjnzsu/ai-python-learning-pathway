@@ -1,6 +1,6 @@
 import unittest
 
-from log_analyzer import parse_log_line
+from log_analyzer import count_log_levels, parse_log_line
 
 
 class ParseLogLineTest(unittest.TestCase):
@@ -28,6 +28,54 @@ class ParseLogLineTest(unittest.TestCase):
             parse_log_line(line)
 
 
+class CountLogLevelsTest(unittest.TestCase):
+    def test_counts_each_log_level(self) -> None:
+        lines = [
+            "2026-08-01T10:15:00|INFO|server started",
+            "2026-08-01T10:16:00|ERROR|database timeout",
+            "2026-08-01T10:17:00|INFO|request completed",
+        ]
+
+        counts = count_log_levels(lines)
+
+        self.assertEqual(
+            counts,
+            {
+                "INFO": 2,
+                "ERROR": 1,
+            },
+        )
+
+    def test_counts_a_previously_unseen_level(self) -> None:
+        lines = [
+            "2026-08-01T10:15:00|INFO|server started",
+            "2026-08-01T10:16:00|ERROR|database timeout",
+            "2026-08-01T10:17:00|WARN|request completed",
+        ]
+
+        counts = count_log_levels(lines)
+
+        self.assertEqual(
+            counts,
+            {
+                "INFO": 1,
+                "ERROR": 1,
+                "WARN": 1,
+            }
+        )
+
+    def test_return_empty_dict(self) -> None:
+        lines = []
+
+        counts = count_log_levels(lines)
+
+        self.assertEqual(
+            counts,
+            {
+
+            }
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
-
