@@ -1,6 +1,6 @@
 import unittest
 
-from log_analyzer import count_log_levels, parse_log_line
+from log_analyzer import count_log_levels, filter_logs_by_level, parse_log_line
 
 
 class ParseLogLineTest(unittest.TestCase):
@@ -26,6 +26,37 @@ class ParseLogLineTest(unittest.TestCase):
             "expected exactly 3 fields",
         ):
             parse_log_line(line)
+
+
+class FilterLogsByLevelTest(unittest.TestCase):
+    def test_filter_log_by_level(self) -> None:
+        lines = [
+            "2026-08-01T10:15:00|INFO|server started",
+            "2026-08-01T10:16:00|ERROR|database timeout",
+            "2026-08-01T10:17:00|INFO|request completed",
+        ]
+
+        events = filter_logs_by_level(lines, "ERROR")
+
+        self.assertEqual(
+            events,
+            [
+                {
+                    "timestamp": "2026-08-01T10:16:00",
+                    "level": "ERROR",
+                    "message": "database timeout",
+                }
+            ],
+        )
+
+    def test_rejects_empty_target_level(self) -> None:
+        lines = []
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "target level must not be empty",
+        ):
+            filter_logs_by_level(lines, "")
 
 
 class CountLogLevelsTest(unittest.TestCase):
