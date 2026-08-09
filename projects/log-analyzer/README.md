@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-已完成单行日志解析和多行日志级别统计，包括未知日志级别与空输入测试。
+已完成日志解析、级别统计、日志过滤、UTF-8 文件读取和命令行入口。CLI 支持按日志级别输出匹配事件，并在参数数量错误时返回用法提示和退出码 `2`。
 
 ## 运行测试
 
@@ -12,4 +12,16 @@
 python -m unittest discover -s tests -v
 ```
 
-第二课完成后应有 5 个测试通过。
+第四课完成后应有 12 个测试通过。
+
+## 运行 CLI
+
+```powershell
+python log_analyzer.py sample.log ERROR
+```
+
+参数格式：
+
+```text
+python log_analyzer.py <log-file> <level>
+```

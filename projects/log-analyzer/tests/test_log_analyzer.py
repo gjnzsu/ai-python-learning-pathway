@@ -1,6 +1,16 @@
 import unittest
 
-from log_analyzer import count_log_levels, filter_logs_by_level, parse_log_line
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
+from log_analyzer import (
+    count_log_levels,
+    filter_logs_by_level,
+    parse_log_line,
+    read_log_lines,
+    main,
+)
 
 
 class ParseLogLineTest(unittest.TestCase):
@@ -106,7 +116,75 @@ class CountLogLevelsTest(unittest.TestCase):
 
             }
         )
+class ReadLogLineTest(unittest.TestCase):
+    def test_reads_multiple_lines_from_file(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            file_path = Path(temp_dir)/"app.log"
+            file_path.write_text(
+                "2026-08-08T10:00:00|INFO|server started\n"
+                "2026-08-08T10:01:00|ERROR|database timeout\n",
+                encoding="utf-8",
+            )
 
+            lines = read_log_lines(str(file_path))
+
+            self.assertEqual(
+                lines,
+                [
+                    "2026-08-08T10:00:00|INFO|server started",
+                    "2026-08-08T10:01:00|ERROR|database timeout",
+                ],
+            )
+
+    def test_returns_empty_list_for_empty_file(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            file_path = Path(temp_dir)/"empty.log"
+            file_path.write_text("", encoding="utf-8",)
+            lines = read_log_lines(str(file_path))
+
+        self.assertEqual(
+            lines,
+            [],
+        )
+
+    def test_raises_error_when_file_not_exist(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            file_path = Path(temp_dir)/"missing.log"
+
+            with self.assertRaises(FileNotFoundError):
+                read_log_lines(str(file_path))
+
+class MainTest(unittest.TestCase):
+    def test_prints_logs_matching_requested_level(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            file_path = Path(temp_dir) / "app.log"
+            file_path.write_text(
+                "2026-08-08T10:00:00|INFO|server started\n"
+                "2026-08-08T10:01:00|ERROR|database timeout\n",
+                encoding="utf-8",
+            )
+            output = StringIO()
+
+            with redirect_stdout(output):
+                exit_code = main([str(file_path), "ERROR"])
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(
+            output.getvalue(),
+            "2026-08-08T10:01:00|ERROR|database timeout\n",
+        )
+
+    def test_returns_usage_error_when_arguments_are_missing(self) -> None:
+        error_output = StringIO()
+
+        with redirect_stderr(error_output):
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(
+            error_output.getvalue(),
+            "usage: python log_analyzer.py <log-file> <level>\n",
+    )
 
 if __name__ == "__main__":
     unittest.main()
