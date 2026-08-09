@@ -1,3 +1,5 @@
+import sys
+
 def parse_log_line(line: str) -> dict[str, str]:
     """Parse one log line into a structured event."""
 
@@ -39,3 +41,35 @@ def filter_logs_by_level(line_array: list[str], level: str) -> list[dict[str, st
             result_list.append(line_dict)
 
     return result_list
+
+def read_log_lines(file_path: str) -> list[str]:
+    lines: list[str] = []
+
+    with open(file_path, "r", encoding="utf-8") as log_file:
+        for line in log_file:
+            lines.append(line.rstrip("\r\n"))
+
+    return lines
+
+def main(arguments: list[str]) -> int:
+
+    if len(arguments) != 2:
+        print(
+            "usage: python log_analyzer.py <log-file> <level>",
+            file=sys.stderr,
+        )
+        return 2
+
+    file_path, level = arguments
+    lines = read_log_lines(str(file_path))
+    events = filter_logs_by_level(lines, level)
+
+    for event in events:
+        print(
+            f'{event["timestamp"]}|{event["level"]}|{event["message"]}'
+        )
+
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
