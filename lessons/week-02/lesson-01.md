@@ -115,6 +115,8 @@ event.describe()
 LogEvent.describe(event)
 ```
 
+这里发生的是“实例自动绑定为方法的第一个参数”，不是 `__init__` 给 `self` 赋值。`__init__` 只负责初始化新实例；所有实例方法通过对象调用时都会遵循同样的绑定规则。
+
 `self` 不是关键字，但它是所有 Python 开发者都遵循的命名约定，不应换成其他名称。
 
 ### `__init__` 不是 Java 构造器的完全等价物
@@ -175,6 +177,20 @@ class LogEvent:
 
 一个实例执行 `event.tags.append("database")` 后，其他实例也能看到这个标签。这通常不是预期行为。
 
+可以用下面的结果确认两个实例查找到的是同一个类属性：
+
+```python
+first_event = LogEvent()
+second_event = LogEvent()
+
+first_event.tags.append("database")
+
+print(second_event.tags)                       # ["database"]
+print(first_event.tags is second_event.tags)   # True
+```
+
+`append()` 修改了共享列表，没有为 `first_event` 创建新的实例属性。
+
 普通类应在 `__init__` 中为每个实例创建列表：
 
 ```python
@@ -232,6 +248,19 @@ event.level = "INFO"  # 抛出 FrozenInstanceError
 ```
 
 它与 Java `record` 的不可重新赋值语义比较接近，但不要把两者视为完全相同。`frozen=True` 也不是“深度不可变”：如果字段本身是列表，列表内容仍然可能被修改。
+
+```python
+@dataclass(frozen=True)
+class TaggedEvent:
+    tags: list[str]
+
+
+event = TaggedEvent(tags=[])
+event.tags.append("database")  # 可以执行，列表内容发生变化
+event.tags = []                # 抛出 FrozenInstanceError
+```
+
+`frozen=True` 阻止的是字段重新绑定，不会递归冻结字段引用的对象。
 
 ### 数据类字段必须有类型标注
 
@@ -452,7 +481,7 @@ level = parse_log_line(line).level
 运行：
 
 ```powershell
-python -m unittest tests.test_log_analyzer.CountLogLevelsTest -v
+python -m unittest discover -s tests -p "test_log_analyzer.py" -k CountLogLevelsTest -v
 ```
 
 统计结果仍然是 `dict[str, int]`，因此测试期望不需要改变。
@@ -485,7 +514,7 @@ result_list: list[LogEvent] = []
 过滤测试的期望值从事件字典改成 `LogEvent(...)`，然后运行：
 
 ```powershell
-python -m unittest tests.test_log_analyzer.FilterLogsByLevelTest -v
+python -m unittest discover -s tests -p "test_log_analyzer.py" -k FilterLogsByLevelTest -v
 ```
 
 空目标级别的 `ValueError` 行为必须保持不变。
@@ -507,7 +536,7 @@ f"{event.timestamp}|{event.level}|{event.message}"
 运行：
 
 ```powershell
-python -m unittest tests.test_log_analyzer.MainTest -v
+python -m unittest discover -s tests -p "test_log_analyzer.py" -k MainTest -v
 ```
 
 原有 CLI 测试不需要修改。它负责证明外部行为仍然是：
@@ -515,6 +544,53 @@ python -m unittest tests.test_log_analyzer.MainTest -v
 ```text
 2026-08-08T10:01:00|ERROR|database timeout
 ```
+
+### 8.4 常见错误与定位方法
+
+#### 编辑器内容尚未保存
+
+如果已经写了 `LogEvent`，测试仍然报告：
+
+```text
+ImportError: cannot import name 'LogEvent'
+```
+
+先确认 `log_analyzer.py` 已保存。测试进程读取的是磁盘文件，不会读取编辑器中尚未保存的缓冲区。
+
+#### 创建对象时误用 Java 花括号
+
+Python 调用类对象时使用圆括号：
+
+```python
+LogEvent(timestamp="...", level="ERROR", message="...")
+```
+
+不要写成：
+
+```python
+LogEvent{timestamp="..."}  # SyntaxError
+```
+
+#### 把数据对象继续当作字典
+
+看到下面的错误：
+
+```text
+TypeError: 'LogEvent' object is not subscriptable
+```
+
+通常表示仍有 `event["level"]` 之类的字典下标访问。沿 traceback 找到具体调用者，改为 `event.level`。不要给 `LogEvent` 临时添加字典下标能力来掩盖尚未完成的迁移。
+
+#### 测试通过但类型标注仍然陈旧
+
+Python 默认不在运行时强制执行类型标注。即使过滤测试已经通过，下面的旧标注也可能残留：
+
+```python
+def filter_logs_by_level(...) -> list[dict[str, str]]:
+    result_list: list[dict[str, str]] = []
+```
+
+迁移完成后必须主动检查并改为 `list[LogEvent]`。空输入测试也可能因为循环执行零次而通过；它不能证明非空数据路径已经正确迁移。
 
 ## 9. REFACTOR：检查对象边界，而不是把函数都变成方法
 
@@ -526,6 +602,8 @@ python -m unittest tests.test_log_analyzer.MainTest -v
 - `read_log_lines()` 是否仍然只负责文件读取？
 - `main()` 的标准输出、标准错误和退出码是否保持不变？
 - 是否保留了非法日志和空目标级别的原有异常行为？
+- 类型标注是否全部与新的 `LogEvent` 数据流一致？
+- `git diff --check` 是否无输出，说明没有尾随空格等格式问题？
 
 不要为了“面向对象”把所有模块级函数塞入 `LogEvent`。当函数的职责是协调文件、事件集合或 CLI 时，保留为模块级函数通常更清楚。
 

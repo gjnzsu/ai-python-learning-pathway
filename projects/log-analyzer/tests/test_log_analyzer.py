@@ -10,6 +10,7 @@ from log_analyzer import (
     parse_log_line,
     read_log_lines,
     main,
+    LogEvent,
 )
 
 
@@ -21,11 +22,11 @@ class ParseLogLineTest(unittest.TestCase):
 
         self.assertEqual(
             event,
-            {
-                "timestamp": "2026-08-01T10:15:00",
-                "level": "ERROR",
-                "message": "database timeout",
-            },
+            LogEvent(
+                timestamp="2026-08-01T10:15:00",
+                level="ERROR",
+                message="database timeout",
+            ),
         )
 
     def test_rejects_log_line_with_missing_fields(self) -> None:
@@ -51,11 +52,11 @@ class FilterLogsByLevelTest(unittest.TestCase):
         self.assertEqual(
             events,
             [
-                {
-                    "timestamp": "2026-08-01T10:16:00",
-                    "level": "ERROR",
-                    "message": "database timeout",
-                }
+                LogEvent(
+                    timestamp="2026-08-01T10:16:00",
+                    level="ERROR",
+                    message="database timeout",
+                )
             ],
         )
 
@@ -185,6 +186,22 @@ class MainTest(unittest.TestCase):
             error_output.getvalue(),
             "usage: python log_analyzer.py <log-file> <level>\n",
     )
+
+class LogEventTest(unittest.TestCase):
+    def test_compares_events_by_field_values(self) -> None:
+        first_event = LogEvent(
+            timestamp="2026-08-08T10:01:00",
+            level="ERROR",
+            message="database timeout",
+        )
+
+        second_event = LogEvent(
+            timestamp="2026-08-08T10:01:00",
+            level="ERROR",
+            message="database timeout",
+        )
+
+        self.assertEqual(first_event, second_event)
 
 if __name__ == "__main__":
     unittest.main()

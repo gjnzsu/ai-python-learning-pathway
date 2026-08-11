@@ -1,6 +1,13 @@
+from dataclasses import dataclass
 import sys
 
-def parse_log_line(line: str) -> dict[str, str]:
+@dataclass(frozen=True)
+class LogEvent:
+    timestamp: str
+    level: str
+    message: str
+
+def parse_log_line(line: str) -> LogEvent:
     """Parse one log line into a structured event."""
 
     log_parts = line.split("|")
@@ -10,35 +17,34 @@ def parse_log_line(line: str) -> dict[str, str]:
 
     timestamp, level, message = log_parts
 
-    return {
-        "timestamp": timestamp,
-        "level": level,
-        "message": message,
-    }
-
+    return LogEvent(
+        timestamp=timestamp,
+        level=level,
+        message=message,
+    )
 
 def count_log_levels(line_array: list[str]) -> dict[str, int]:
 
     log_level_count: dict[str, int] = {}
 
     for line in line_array:
-        level = parse_log_line(line)["level"]
+        level = parse_log_line(line).level
         log_level_count[level] = log_level_count.get(level, 0) + 1
 
     return log_level_count
 
 
-def filter_logs_by_level(line_array: list[str], level: str) -> list[dict[str, str]]:
+def filter_logs_by_level(line_array: list[str], level: str) -> list[LogEvent]:
     if level == "":
         raise ValueError("target level must not be empty")
 
-    result_list: list[dict[str, str]] = []
+    result_list: list[LogEvent] = []
 
     for line in line_array:
-        line_dict = parse_log_line(line)
+        line_event = parse_log_line(line)
 
-        if line_dict["level"] == level:
-            result_list.append(line_dict)
+        if line_event.level == level:
+            result_list.append(line_event)
 
     return result_list
 
@@ -66,7 +72,7 @@ def main(arguments: list[str]) -> int:
 
     for event in events:
         print(
-            f'{event["timestamp"]}|{event["level"]}|{event["message"]}'
+            f'{event.timestamp}|{event.level}|{event.message}'
         )
 
     return 0
