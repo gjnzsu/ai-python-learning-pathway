@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from collections.abc import Iterable, Iterator
 import sys
 
 @dataclass(frozen=True)
@@ -38,15 +39,11 @@ def filter_logs_by_level(line_array: list[str], level: str) -> list[LogEvent]:
     if level == "":
         raise ValueError("target level must not be empty")
 
-    result_list: list[LogEvent] = []
+    events = parse_log_lines(line_array)
 
-    for line in line_array:
-        line_event = parse_log_line(line)
+    matching_events = filter_events_by_level(events, level)
 
-        if line_event.level == level:
-            result_list.append(line_event)
-
-    return result_list
+    return list(matching_events)
 
 def read_log_lines(file_path: str) -> list[str]:
     lines: list[str] = []
@@ -56,6 +53,22 @@ def read_log_lines(file_path: str) -> list[str]:
             lines.append(line.rstrip("\r\n"))
 
     return lines
+
+def parse_log_lines(lines: Iterable[str]) -> Iterator[LogEvent]:
+    for line in lines:
+        yield parse_log_line(line)
+
+def filter_events_by_level(events: Iterable[LogEvent], level: str) -> Iterator[LogEvent]:
+
+    if level == "":
+        raise ValueError("target level must not be empty")
+
+    def matching_events() -> Iterator[LogEvent]:
+        for event in events:
+            if event.level == level:
+                yield event
+
+    return matching_events()
 
 def main(arguments: list[str]) -> int:
 
@@ -68,9 +81,10 @@ def main(arguments: list[str]) -> int:
 
     file_path, level = arguments
     lines = read_log_lines(str(file_path))
-    events = filter_logs_by_level(lines, level)
+    events = parse_log_lines(lines)
+    matching_events = filter_events_by_level(events, level)
 
-    for event in events:
+    for event in matching_events:
         print(
             f'{event.timestamp}|{event.level}|{event.message}'
         )

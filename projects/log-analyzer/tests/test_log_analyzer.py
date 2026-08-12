@@ -11,6 +11,8 @@ from log_analyzer import (
     read_log_lines,
     main,
     LogEvent,
+    parse_log_lines,
+    filter_events_by_level,
 )
 
 
@@ -202,6 +204,76 @@ class LogEventTest(unittest.TestCase):
         )
 
         self.assertEqual(first_event, second_event)
+
+class ParseLogLinesTest(unittest.TestCase):
+    def test_parses_multiple_lines(self) -> None:
+        lines = [
+            "2026-08-08T10:00:00|INFO|server started",
+            "2026-08-08T10:01:00|ERROR|database timeout",
+        ]
+
+        events = list(parse_log_lines(lines))
+
+        self.assertEqual(
+            events,
+            [
+                LogEvent(
+                    timestamp="2026-08-08T10:00:00",
+                    level="INFO",
+                    message="server started",
+                ),
+                LogEvent(
+                    timestamp="2026-08-08T10:01:00",
+                    level="ERROR",
+                    message="database timeout",
+                ),
+            ],
+        )
+
+    def test_parses_lines_lazily(self) -> None:
+        lines = [
+            "2026-08-08T10:00:00|INFO|server started",
+            "invalid line",
+        ]
+
+        events = parse_log_lines(lines)
+
+        first_event = next(events)
+
+        self.assertEqual(first_event.level, "INFO")
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "expected exactly 3 fields",
+        ):
+            next(events)
+
+class FilterEventsByLevelTest(unittest.TestCase):
+    def test_yields_matching_events(self) -> None:
+        info_event = LogEvent(
+            timestamp="2026-08-08T10:00:00",
+            level="INFO",
+            message="server started",
+        )
+        error_event = LogEvent(
+            timestamp="2026-08-08T10:01:00",
+            level="ERROR",
+            message="database timeout",
+        )
+
+        events = filter_events_by_level(
+            [info_event, error_event],
+            "ERROR",
+        )
+
+        self.assertEqual(list(events), [error_event])
+
+    def test_rejects_empty_target_level_immediately(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "target level must not be empty",
+        ):
+            filter_events_by_level([], "")
 
 if __name__ == "__main__":
     unittest.main()
