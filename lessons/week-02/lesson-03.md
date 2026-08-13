@@ -311,7 +311,7 @@ class OpenLogLinesTest(unittest.TestCase):
 运行：
 
 ```powershell
-python -m unittest tests.test_log_analyzer.OpenLogLinesTest -v
+python -m unittest discover -s tests -p "test_log_analyzer.py" -k OpenLogLinesTest -v
 ```
 
 因为 `open_log_lines` 尚不存在，预期先看到导入失败。
@@ -384,7 +384,7 @@ def test_closes_file_when_context_exits(self) -> None:
 运行：
 
 ```powershell
-python -m unittest tests.test_log_analyzer.OpenLogLinesTest -v
+python -m unittest discover -s tests -p "test_log_analyzer.py" -k OpenLogLinesTest -v
 ```
 
 现有实现中的内层 `with open(...)` 会在外层上下文退出时关闭 `log_file`，第二轮应直接变绿。TDD 不要求每轮都新增生产代码；测试也可以把已经依赖但尚未证明的行为固定下来。
@@ -445,7 +445,7 @@ def read_log_lines(file_path: str) -> list[str]:
 运行旧文件读取测试：
 
 ```powershell
-python -m unittest tests.test_log_analyzer.ReadLogLineTest -v
+python -m unittest discover -s tests -p "test_log_analyzer.py" -k ReadLogLineTest -v
 ```
 
 多行、空文件和不存在文件三个行为都应保持不变。
@@ -485,7 +485,7 @@ with 进入 ──────────────────────�
 运行 CLI 测试：
 
 ```powershell
-python -m unittest tests.test_log_analyzer.MainTest -v
+python -m unittest discover -s tests -p "test_log_analyzer.py" -k MainTest -v
 ```
 
 用户仍然看到相同文本和退出码，内部则不再先创建完整行列表。

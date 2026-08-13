@@ -1,12 +1,15 @@
 from dataclasses import dataclass
 from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
 import sys
+
 
 @dataclass(frozen=True)
 class LogEvent:
     timestamp: str
     level: str
     message: str
+
 
 def parse_log_line(line: str) -> LogEvent:
     """Parse one log line into a structured event."""
@@ -24,8 +27,8 @@ def parse_log_line(line: str) -> LogEvent:
         message=message,
     )
 
-def count_log_levels(line_array: list[str]) -> dict[str, int]:
 
+def count_log_levels(line_array: list[str]) -> dict[str, int]:
     log_level_count: dict[str, int] = {}
 
     for line in line_array:
@@ -45,21 +48,31 @@ def filter_logs_by_level(line_array: list[str], level: str) -> list[LogEvent]:
 
     return list(matching_events)
 
+
 def read_log_lines(file_path: str) -> list[str]:
-    lines: list[str] = []
+    with open_log_lines(file_path) as lines:
+        return list(lines)
 
+
+@contextmanager
+def open_log_lines(file_path: str) -> Iterator[Iterator[str]]:
     with open(file_path, "r", encoding="utf-8") as log_file:
-        for line in log_file:
-            lines.append(line.rstrip("\r\n"))
 
-    return lines
+        def stripped_lines() -> Iterator[str]:
+            for line in log_file:
+                yield line.rstrip("\r\n")
+
+        yield stripped_lines()
+
 
 def parse_log_lines(lines: Iterable[str]) -> Iterator[LogEvent]:
     for line in lines:
         yield parse_log_line(line)
 
-def filter_events_by_level(events: Iterable[LogEvent], level: str) -> Iterator[LogEvent]:
 
+def filter_events_by_level(
+    events: Iterable[LogEvent], level: str
+) -> Iterator[LogEvent]:
     if level == "":
         raise ValueError("target level must not be empty")
 
@@ -70,8 +83,8 @@ def filter_events_by_level(events: Iterable[LogEvent], level: str) -> Iterator[L
 
     return matching_events()
 
-def main(arguments: list[str]) -> int:
 
+def main(arguments: list[str]) -> int:
     if len(arguments) != 2:
         print(
             "usage: python log_analyzer.py <log-file> <level>",
@@ -80,16 +93,16 @@ def main(arguments: list[str]) -> int:
         return 2
 
     file_path, level = arguments
-    lines = read_log_lines(str(file_path))
-    events = parse_log_lines(lines)
-    matching_events = filter_events_by_level(events, level)
 
-    for event in matching_events:
-        print(
-            f'{event.timestamp}|{event.level}|{event.message}'
-        )
+    with open_log_lines(file_path) as lines:
+        events = parse_log_lines(lines)
+        matching_events = filter_events_by_level(events, level)
+
+        for event in matching_events:
+            print(f"{event.timestamp}|{event.level}|{event.message}")
 
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
