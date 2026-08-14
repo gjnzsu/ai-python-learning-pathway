@@ -1,7 +1,8 @@
-from dataclasses import dataclass
-from collections.abc import Iterable, Iterator
-from contextlib import contextmanager
 import sys
+from collections.abc import Iterable, Iterator
+from contextlib import AbstractContextManager, contextmanager
+from dataclasses import dataclass
+from typing import Protocol
 
 
 @dataclass(frozen=True)
@@ -9,6 +10,13 @@ class LogEvent:
     timestamp: str
     level: str
     message: str
+
+
+class LogSource(Protocol):
+    def open_lines(
+        self,
+    ) -> AbstractContextManager[Iterator[str]]:
+        ...
 
 
 def parse_log_line(line: str) -> LogEvent:
@@ -65,6 +73,16 @@ def open_log_lines(file_path: str) -> Iterator[Iterator[str]]:
         yield stripped_lines()
 
 
+@dataclass(frozen=True)
+class FileLogSource:
+    file_path: str
+
+    def open_lines(
+        self,
+    ) -> AbstractContextManager[Iterator[str]]:
+        return open_log_lines(self.file_path)
+
+
 def parse_log_lines(lines: Iterable[str]) -> Iterator[LogEvent]:
     for line in lines:
         yield parse_log_line(line)
@@ -84,6 +102,15 @@ def filter_events_by_level(
     return matching_events()
 
 
+def print_matching_events(source: LogSource, level: str) -> None:
+    with source.open_lines() as lines:
+        events = parse_log_lines(lines)
+        matching_events = filter_events_by_level(events, level)
+
+        for event in matching_events:
+            print(f"{event.timestamp}|{event.level}|{event.message}")
+
+
 def main(arguments: list[str]) -> int:
     if len(arguments) != 2:
         print(
@@ -94,12 +121,9 @@ def main(arguments: list[str]) -> int:
 
     file_path, level = arguments
 
-    with open_log_lines(file_path) as lines:
-        events = parse_log_lines(lines)
-        matching_events = filter_events_by_level(events, level)
+    source = FileLogSource(file_path)
 
-        for event in matching_events:
-            print(f"{event.timestamp}|{event.level}|{event.message}")
+    print_matching_events(source, level)
 
     return 0
 

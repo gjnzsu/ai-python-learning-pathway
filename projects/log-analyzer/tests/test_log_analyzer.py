@@ -1,10 +1,17 @@
 import unittest
-
+from collections.abc import Iterator
+from contextlib import (
+    AbstractContextManager,
+    nullcontext,
+    redirect_stderr,
+    redirect_stdout,
+)
+from dataclasses import dataclass
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from contextlib import redirect_stderr, redirect_stdout
-from io import StringIO
 from unittest.mock import patch
+
 from log_analyzer import (
     count_log_levels,
     filter_logs_by_level,
@@ -15,6 +22,7 @@ from log_analyzer import (
     parse_log_lines,
     filter_events_by_level,
     open_log_lines,
+    print_matching_events,
 )
 
 
@@ -65,7 +73,7 @@ class FilterLogsByLevelTest(unittest.TestCase):
         )
 
     def test_rejects_empty_target_level(self) -> None:
-        lines = []
+        lines: list[str] = []
 
         with self.assertRaisesRegex(
             ValueError,
@@ -111,7 +119,7 @@ class CountLogLevelsTest(unittest.TestCase):
         )
 
     def test_return_empty_dict(self) -> None:
-        lines = []
+        lines: list[str] = []
 
         counts = count_log_levels(lines)
 
@@ -329,6 +337,36 @@ class OpenLogLinesTest(unittest.TestCase):
                     list(events)
 
         self.assertTrue(log_file.closed)
+
+
+@dataclass(frozen=True)
+class MemoryLogSource:
+    lines: tuple[str, ...]
+
+    def open_lines(
+        self,
+    ) -> AbstractContextManager[Iterator[str]]:
+        return nullcontext(iter(self.lines))
+
+
+class PrintMatchingEventsTest(unittest.TestCase):
+    def test_prints_events_from_a_structural_log_source(self) -> None:
+        source = MemoryLogSource(
+            lines=(
+                "2026-08-08T10:00:00|INFO|server started",
+                "2026-08-08T10:01:00|ERROR|database timeout",
+            ),
+        )
+
+        output = StringIO()
+
+        with redirect_stdout(output):
+            print_matching_events(source, "ERROR")
+
+        self.assertEqual(
+            output.getvalue(),
+            "2026-08-08T10:01:00|ERROR|database timeout\n",
+        )
 
 
 if __name__ == "__main__":
