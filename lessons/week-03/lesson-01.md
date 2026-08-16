@@ -325,7 +325,7 @@ import requests
 本课使用版本范围表达兼容意图：
 
 ```toml
-"pytest>=9,<10"
+"pytest>=8.3,<10"
 ```
 
 这与完全锁定环境不是同一个问题：
@@ -360,13 +360,20 @@ python -m mypy log_analyzer.py tests/test_log_analyzer.py
 
 如果基线失败，先不要移动文件。项目结构重构应改变代码位置，不应掩盖原有行为错误。
 
-本课的 RED 与之前略有不同：它不是先写一个失败的业务断言，而是先定义新的运行方式，再观察它在包尚未建立时失败：
+当前单文件底部已有 `if __name__ == "__main__"`，因此它本来就支持：
 
 ```powershell
 python -m log_analyzer sample.log ERROR
 ```
 
-在包尚不存在或尚未安装时，预期失败并提示找不到 `log_analyzer` 或无法执行包。这就是本轮工程化目标的 RED。
+本课先把这条命令的输出和退出码记录为迁移基线。包化后，同一命令将改由 `log_analyzer/__main__.py` 执行，但外部行为必须保持不变。
+
+这次结构重构不强行制造业务测试的 RED。它的新增验收条件是：
+
+- `log_analyzer.__file__` 最终指向 `src/log_analyzer/__init__.py`，而不是旧模块。
+- `python -m log_analyzer` 继续成功运行。
+- editable install 后新增的 `log-analyzer` 命令成功运行。
+- 现有测试与静态检查全部保持绿色。
 
 ## 8. 第一轮迁移：建立核心包
 
@@ -542,6 +549,12 @@ python -m pip install -e ".[dev]"
 - `.`：安装当前目录中的项目。
 - `-e` / `--editable`：建立适合开发的可编辑安装；修改 `src/` 中的 Python 源码后通常不需要反复重装。
 - `[dev]`：同时安装 `pyproject.toml` 中的开发依赖组。
+
+editable install 通常会在 `src/` 下生成 `*.egg-info/` 元数据目录。它可以由安装命令重建，不应提交到 Git；在仓库 `.gitignore` 中加入：
+
+```gitignore
+*.egg-info/
+```
 
 验证安装来源：
 
@@ -750,6 +763,7 @@ git status --short
 - [ ] 模块入口和 console script 的正常路径均返回 `0`。
 - [ ] 错误参数路径返回 `2`。
 - [ ] `.venv` 未出现在 Git 变更中。
+- [ ] `*.egg-info/` 未出现在 Git 变更中。
 - [ ] 已回答小测的 12 个问题。
 
 ## 18. 视频与阅读材料

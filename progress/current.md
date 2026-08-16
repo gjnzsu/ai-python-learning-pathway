@@ -10,18 +10,32 @@
 
 ## 当前状态
 
-- 周次：第 2 周已完成
-- 已完成：第 2 周，第 4 课，协议、类型标注与静态检查（2026-08-14）
-- 下一课：第 3 周，第 1 课，项目结构、虚拟环境与依赖管理
-- 状态：第 2 周全部课程已完成
+- 周次：第 3 周进行中
+- 已完成：第 3 周，第 1 课，项目结构、模块、包与依赖环境（2026-08-16）
+- 下一课：第 3 周，第 2 课，pytest、fixture 与参数化测试
+- 状态：第 3 周第 1 课已完成
 - 项目：日志分析 CLI
-- 当前 TDD 阶段：日志数据源协议、结构化替换与静态检查 GREEN
+- 当前 TDD 阶段：单文件到 `src/` 包结构重构 GREEN
 
 ## 下一步
 
-1. 巩固 `Protocol` 与继承、鸭子类型和运行时校验的区别。
-2. 学习 Python 项目结构与模块边界，将单文件 CLI 逐步拆分为包。
-3. 建立虚拟环境和明确的依赖管理方式，为测试与静态检查提供可复现环境。
+1. 巩固模块、导入包、发行包和 console script 的名称与职责差异。
+2. 学习 pytest 的测试发现、普通 `assert` 与失败信息。
+3. 将现有 `unittest` 测试逐步迁移为 pytest，并练习 fixture 与参数化测试。
+
+## 第 3 周 · 第 1 课成果
+
+- 创建项目专用 `.venv`，并通过 `sys.executable` 与 `python -m pip --version` 验证解释器和安装器属于同一环境。
+- 区分发行名 `course-log-analyzer`、导入包名 `log_analyzer` 和终端命令名 `log-analyzer`。
+- 使用 `pyproject.toml` 声明构建后端、Python 版本、开发依赖和 console script。
+- 将单文件 `log_analyzer.py` 迁移为 `src/log_analyzer/` 包，并分离 `core.py`、`cli.py` 和 `__main__.py`。
+- 使用 `__init__.py` 保持现有包级公开接口，使测试无需了解内部模块位置。
+- 使用 editable install 连接虚拟环境与 `src/` 源码，并通过 `__file__` 定位真实导入来源。
+- 识别并解决旧同名模块遮蔽新包的问题。
+- 理解 `python -m log_analyzer` 经 `__main__.py` 启动，而 `log-analyzer` console script 直接调用 `cli.run()`。
+- 将 `*.egg-info/` 加入忽略规则，不提交可重建的安装元数据。
+- 手动验证模块入口、console script 和错误参数路径，退出码分别为 `0`、`0` 和 `2`。
+- 当前测试：21 个测试通过；mypy 检查 5 个源文件无错误；Ruff 检查通过。
 
 ## 第 2 周 · 第 4 课成果
 

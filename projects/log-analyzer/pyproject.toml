@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "course-log-analyzer"
+version = "0.1.0"
+description = "A tested log analysis CLI built during the Python learning pathway"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<10",
+    "mypy>=2.3,<3",
+]
+
+[project.scripts]
+log-analyzer = "log_analyzer.cli:run"
+
+[tool.setuptools.packages.find]
+where = ["src"]

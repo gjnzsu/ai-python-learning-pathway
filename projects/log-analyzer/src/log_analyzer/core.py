@@ -1,4 +1,3 @@
-import sys
 from collections.abc import Iterable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
@@ -109,24 +108,3 @@ def print_matching_events(source: LogSource, level: str) -> None:
 
         for event in matching_events:
             print(f"{event.timestamp}|{event.level}|{event.message}")
-
-
-def main(arguments: list[str]) -> int:
-    if len(arguments) != 2:
-        print(
-            "usage: python log_analyzer.py <log-file> <level>",
-            file=sys.stderr,
-        )
-        return 2
-
-    file_path, level = arguments
-
-    source = FileLogSource(file_path)
-
-    print_matching_events(source, level)
-
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
