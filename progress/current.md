@@ -11,17 +11,32 @@
 ## 当前状态
 
 - 周次：第 3 周进行中
-- 已完成：第 3 周，第 1 课，项目结构、模块、包与依赖环境（2026-08-16）
-- 下一课：第 3 周，第 2 课，pytest、fixture 与参数化测试
-- 状态：第 3 周第 1 课已完成
+- 已完成：第 3 周，第 2 课，pytest、fixture 与参数化测试（2026-08-17）
+- 下一课：第 3 周，第 3 课，Python logging、配置与可靠 I/O
+- 状态：第 3 周第 2 课已完成
 - 项目：日志分析 CLI
-- 当前 TDD 阶段：单文件到 `src/` 包结构重构 GREEN
+- 当前 TDD 阶段：`unittest` 到 pytest 渐进迁移 GREEN
 
 ## 下一步
 
-1. 巩固模块、导入包、发行包和 console script 的名称与职责差异。
-2. 学习 pytest 的测试发现、普通 `assert` 与失败信息。
-3. 将现有 `unittest` 测试逐步迁移为 pytest，并练习 fixture 与参数化测试。
+1. 巩固 pytest 按参数名称解析 fixture，而类型标注只服务于阅读、IDE 和静态检查。
+2. 学习 Python logging 的 logger、handler、level 与格式化配置。
+3. 为配置加载和 I/O 失败路径继续编写隔离、可重复的 pytest 测试。
+
+## 第 3 周 · 第 2 课成果
+
+- 使用 pytest 9.1.1 直接收集并运行原有 21 个 `unittest.TestCase` 测试，建立渐进迁移基线。
+- 使用 `--collect-only`、节点 ID 和 `-k` 区分测试发现、筛选与真正执行。
+- 将全部 `TestCase` 迁移为普通测试函数，并使用原生 `assert` 观察数据类字段级失败差异。
+- 使用 `pytest.raises(..., match=...)` 验证异常类型与消息，并理解第二个位置参数会进入旧式可调用对象模式。
+- 将三个日志级别统计场景改为带领域化 ID 的参数化测试，同时保持总测试节点数为 21。
+- 定义依赖内置 `tmp_path` 的 `log_file` fixture，理解 pytest 按参数名称递归解析 fixture 依赖。
+- 使用 `tmp_path` 替代 `TemporaryDirectory`，为每个测试提供独立的 `pathlib.Path` 临时目录。
+- 使用 `capsys` 分别验证 stdout 与 stderr，并移除手工的输出重定向。
+- 保留 `unittest.mock.patch` 测试文件关闭行为，理解迁移 pytest 不等于替换所有标准库测试工具。
+- 通过测试数从 21 变为 24 和 23 的两次现象识别重复保留的旧测试类，并恢复为 21 个独立场景。
+- 使用 Ruff formatter 统一导入分组、顶层空行与文件结尾，并由 Ruff 发现残留的未使用 `unittest` 导入。
+- 最终验证：21 个 pytest 测试通过；mypy 检查 5 个源文件无错误；Ruff 检查通过。
 
 ## 第 3 周 · 第 1 课成果
 

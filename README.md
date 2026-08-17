@@ -4,9 +4,9 @@
 
 ## 当前进度
 
-- 已完成课程：第 3 周，第 1 课
+- 已完成课程：第 3 周，第 2 课
 - 当前项目：日志分析 CLI
-- 下一步：第 3 周，第 2 课，pytest、fixture 与参数化测试
+- 下一步：第 3 周，第 3 课，Python logging、配置与可靠 I/O
 
 ## 目录
 
@@ -25,7 +25,7 @@ cd projects/log-analyzer
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
-python -m unittest discover -s tests -v
+python -m pytest -q
 ```
 
-当前共有 21 个测试通过，mypy 检查 5 个源文件无错误。日志分析器已经从单文件迁移为可编辑安装的 `src/` 包，支持 `python -m log_analyzer` 与 `log-analyzer` 两种入口，同时保留 `LogSource` 协议、流式读取、确定关闭、CLI 输出与退出码。
+当前共有 21 个 pytest 测试通过，mypy 检查 5 个源文件无错误，Ruff 检查通过。测试套件已从 `unittest.TestCase` 渐进迁移为 pytest 普通函数，并使用 fixture、`tmp_path`、`capsys` 和参数化测试；日志分析器继续支持 `python -m log_analyzer` 与 `log-analyzer` 两种入口，同时保留 `LogSource` 协议、流式读取、确定关闭、CLI 输出与退出码。
