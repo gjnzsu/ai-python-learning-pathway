@@ -5,6 +5,7 @@ from contextlib import (
 )
 from dataclasses import dataclass
 from io import StringIO
+import logging
 from pathlib import Path
 from unittest.mock import patch
 
@@ -323,3 +324,56 @@ def test_prints_events_from_a_structural_log_source(
     captured = capsys.readouterr()
     assert captured.out == ("2026-08-08T10:01:00|ERROR|database timeout\n")
     assert captured.err == ""
+
+def test_returns_io_error_code_for_missing_log_file(tmp_path, capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = main([str(tmp_path / "missing.log"), "ERROR"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert captured.out == ""
+    assert "failed to read log file" in captured.err
+
+
+def test_returns_usage_error_on_invalid_level(capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = main(["sample.log", "VERBOSE"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert captured.out == ""
+    assert "invalid log level" in captured.err
+
+
+def test_returns_io_error_code_for_permission_issue(tmp_path, capsys: pytest.CaptureFixture[str]) -> None:
+    with patch("log_analyzer.core.open_log_lines", side_effect=OSError("permission denied")):
+        exit_code = main([str(tmp_path / "app.log"), "ERROR"])
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert captured.out == ""
+    assert "failed to read log file" in captured.err
+
+
+def test_invalid_level_is_logged(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING):
+        main(["sample.log", "VERBOSE"])
+
+    assert any(
+        "invalid log level: VERBOSE" in record.message
+        for record in caplog.records
+    )
+
+
+def test_io_error_is_logged(tmp_path, capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.ERROR):
+         exit_code = main([str(tmp_path / "app.log"), "ERROR"])
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert captured.out == ""
+    assert "failed to read log file" in captured.err
+    assert any(
+        record.levelname == "ERROR" and "failed to read log file" in record.message
+        for record in caplog.records
+    )
