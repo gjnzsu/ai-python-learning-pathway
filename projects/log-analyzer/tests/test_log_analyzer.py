@@ -1,3 +1,5 @@
+import logging
+import sys
 from collections.abc import Iterator
 from contextlib import (
     AbstractContextManager,
@@ -5,23 +7,26 @@ from contextlib import (
 )
 from dataclasses import dataclass
 from io import StringIO
-import logging
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from log_analyzer import (
-    count_log_levels,
-    filter_logs_by_level,
-    parse_log_line,
-    read_log_lines,
-    main,
+    FileLogSource,
     LogEvent,
-    parse_log_lines,
+    count_log_levels,
     filter_events_by_level,
+    filter_logs_by_level,
+    main,
     open_log_lines,
+    parse_log_line,
+    parse_log_lines,
     print_matching_events,
+    read_log_lines,
+)
+from log_analyzer.cli import (
+    run,
 )
 
 
@@ -144,7 +149,8 @@ def test_returns_usage_error_when_arguments_are_missing(
 
     assert exit_code == 2
     assert captured.out == ""
-    assert captured.err == ("usage: python log_analyzer.py <log-file> <level>\n")
+    assert "usage:" in captured.err
+    assert "the following arguments are required" in captured.err
 
 
 def test_compares_events_by_field_values() -> None:
@@ -270,16 +276,36 @@ def test_yields_stripped_lines_as_an_iterator(
     assert first_line == ("2026-08-08T10:00:00|INFO|server started")
 
 
+def test_reads_multiple_lines_from_path_object(log_file: Path) -> None:
+    lines = read_log_lines(log_file)
+
+    assert lines == [
+        "2026-08-08T10:00:00|INFO|server started",
+        "2026-08-08T10:01:00|ERROR|database timeout",
+    ]
+
+
+def test_file_log_source_accepts_path(log_file: Path) -> None:
+    source = FileLogSource(log_file)
+
+    with source.open_lines() as lines:
+        first = next(lines)
+
+    assert first == "2026-08-08T10:00:00|INFO|server started"
+
+
 def test_closes_file_when_context_exits() -> None:
     log_file = StringIO(
         "2026-08-08T10:00:00|INFO|server started\n"
         "2026-08-08T10:01:00|ERROR|database timeout\n"
     )
 
-    with patch("builtins.open", return_value=log_file):
-        with open_log_lines("app.log") as lines:
-            next(lines)
-            assert not log_file.closed
+    with (
+        patch("pathlib.Path.open", return_value=log_file),
+        open_log_lines("app.log") as lines,
+    ):
+        next(lines)
+        assert not log_file.closed
 
     assert log_file.closed
 
@@ -287,14 +313,16 @@ def test_closes_file_when_context_exits() -> None:
 def test_closes_file_when_consumer_raises() -> None:
     log_file = StringIO("2026-08-08T10:00:00|INFO|server started\n" "invalid line\n")
 
-    with pytest.raises(
-        ValueError,
-        match="expected exactly 3 fields",
+    with (
+        pytest.raises(
+            ValueError,
+            match="expected exactly 3 fields",
+        ),
+        patch("pathlib.Path.open", return_value=log_file),
+        open_log_lines("app.log") as lines,
     ):
-        with patch("builtins.open", return_value=log_file):
-            with open_log_lines("app.log") as lines:
-                events = parse_log_lines(lines)
-                list(events)
+        events = parse_log_lines(lines)
+        list(events)
 
     assert log_file.closed
 
@@ -376,4 +404,34 @@ def test_io_error_is_logged(tmp_path, capsys: pytest.CaptureFixture[str], caplog
     assert any(
         record.levelname == "ERROR" and "failed to read log file" in record.message
         for record in caplog.records
+    )
+
+
+def test_returns_zero_for_help(capsys:pytest.CaptureFixture[str],) -> None:
+    exit_code = main(["--help"])
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "usage:" in captured.out
+    assert "log_file" in captured.out
+    assert "level" in captured.out
+    assert captured.err == ""
+
+
+def test_run_uses_command_line_arguments(
+    log_file: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["log-analyzer", str(log_file), "ERROR"])
+
+    with pytest.raises(SystemExit) as error:
+        run()
+
+    captured = capsys.readouterr()
+
+    assert error.value.code == 0
+    assert captured.out == (
+        "2026-08-08T10:01:00|ERROR|database timeout\n"
     )

@@ -7,4 +7,6 @@ __pycache__/
 .idea/
 .vscode/
 *.egg-info/
+build/
+dist/
 

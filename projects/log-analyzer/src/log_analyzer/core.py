@@ -1,6 +1,7 @@
 from collections.abc import Iterable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 
 
@@ -16,6 +17,9 @@ class LogSource(Protocol):
         self,
     ) -> AbstractContextManager[Iterator[str]]:
         ...
+
+
+LogPath = str | Path
 
 
 def parse_log_line(line: str) -> LogEvent:
@@ -56,14 +60,16 @@ def filter_logs_by_level(line_array: list[str], level: str) -> list[LogEvent]:
     return list(matching_events)
 
 
-def read_log_lines(file_path: str) -> list[str]:
+def read_log_lines(file_path: LogPath) -> list[str]:
     with open_log_lines(file_path) as lines:
         return list(lines)
 
 
 @contextmanager
-def open_log_lines(file_path: str) -> Iterator[Iterator[str]]:
-    with open(file_path, "r", encoding="utf-8") as log_file:
+def open_log_lines(file_path: LogPath) -> Iterator[Iterator[str]]:
+    path = Path(file_path)
+
+    with path.open("r", encoding="utf-8") as log_file:
 
         def stripped_lines() -> Iterator[str]:
             for line in log_file:
@@ -74,7 +80,7 @@ def open_log_lines(file_path: str) -> Iterator[Iterator[str]]:
 
 @dataclass(frozen=True)
 class FileLogSource:
-    file_path: str
+    file_path: LogPath
 
     def open_lines(
         self,

@@ -16,14 +16,17 @@ python -m pip install -e ".[dev]"
 
 项目使用 editable install；修改 `src/log_analyzer/` 下的 Python 源码后通常不需要重新安装。依赖或 console script 配置改变后，应重新执行安装命令。
 
-## 运行测试
+## 质量检查
 
 ```powershell
-python -m unittest discover -s tests -v
-python -m mypy src\log_analyzer tests\test_log_analyzer.py
+python -m pytest -q
+python -m mypy src tests
+python -m ruff check .
+python -m build
+git diff --check
 ```
 
-当前应有 21 个测试通过，mypy 检查 5 个源文件无错误。
+当前应有 30 个测试通过，mypy 与 Ruff 检查无错误，并能成功生成 wheel 和源码包。
 
 ## 运行 CLI
 
@@ -35,7 +38,7 @@ log-analyzer sample.log INFO
 参数格式：
 
 ```text
-log-analyzer <log-file> <level>
+log-analyzer [--config CONFIG_PATH] <log-file> <level>
 ```
 
 正常执行返回 `0`；参数数量错误时向标准错误输出 usage，并返回 `2`。
