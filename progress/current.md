@@ -10,18 +10,33 @@
 
 ## 当前状态
 
-- 周次：第 3 周进行中
-- 已完成：第 3 周，第 2 课，pytest、fixture 与参数化测试（2026-08-17）
-- 下一课：第 3 周，第 3 课，Python logging、配置与可靠 I/O
-- 状态：第 3 周第 2 课已完成
-- 项目：日志分析 CLI
-- 当前 TDD 阶段：`unittest` 到 pytest 渐进迁移 GREEN
+- 周次：第 3 周已完成
+- 已完成：第 3 周，第 4 课，argparse、pathlib 与项目收尾（2026-08-20）
+- 下一课：第 3 周复盘与第 4 周课程准备
+- 状态：第 3 周日志分析 CLI 已达到可测试、可构建、可安装和可提交状态
+- 项目：日志分析 CLI（第 3 周阶段完成）
+- 当前 TDD 阶段：CLI 参数解析与路径兼容改造 GREEN
 
 ## 下一步
 
-1. 巩固 pytest 按参数名称解析 fixture，而类型标注只服务于阅读、IDE 和静态检查。
-2. 学习 Python logging 的 logger、handler、level 与格式化配置。
-3. 为配置加载和 I/O 失败路径继续编写隔离、可重复的 pytest 测试。
+1. 完成第 3 周知识复盘与本课小测，巩固 `argparse`、`pathlib` 和 Python 打包边界。
+2. 回顾 `main()` 与 `run()`、editable install 与 wheel、单元测试与 CLI 手动验收的职责差异。
+3. 准备进入第 4 周课程。
+
+## 第 3 周 · 第 4 课成果
+
+- 使用 `argparse.ArgumentParser` 替代手写参数数量判断，自动生成 `--help`、usage 和位置参数说明。
+- 通过第一轮 RED → GREEN 验证 `main(["--help"])` 返回 `0`，帮助文本写入 stdout，stderr 保持为空。
+- 保持 `main(arguments) -> int` 与 `run() -> None` 的边界，并安全收窄 `SystemExit.code` 的联合类型，使 mypy 检查通过。
+- 使用 `str | Path` 表达日志路径输入，在函数边界统一转换为 `Path`，同时保持字符串调用兼容。
+- 将文件资源测试的 patch 目标从 `builtins.open` 调整为 `pathlib.Path.open`，继续验证正常退出和异常路径都会关闭文件。
+- 使用 pytest `monkeypatch` 隔离 `sys.argv`，验证 console script 入口只负责参数转发与进程退出。
+- 理解并修复 Ruff 的导入排序、顶层空行和嵌套 `with` 规则问题。
+- 最终质量门禁：30 个 pytest 测试通过；mypy 检查 5 个源文件无错误；Ruff 检查通过；`git diff --check` 通过。
+- 使用 `python -m build` 成功生成 wheel 与源码包，并将 `build/`、`dist/` 加入仓库忽略规则。
+- 在全新临时虚拟环境中安装 wheel，并在项目目录外成功运行 `log-analyzer --help` 与日志过滤命令，退出码均为 `0`。
+- 更新项目 README，使测试数量、质量检查命令和 CLI 参数格式与实际行为一致。
+- 已提交并推送到 `origin/main`，提交为 `fc8017a`。
 
 ## 第 3 周 · 第 2 课成果
 

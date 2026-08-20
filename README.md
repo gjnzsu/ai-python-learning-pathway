@@ -4,9 +4,9 @@
 
 ## 当前进度
 
-- 已完成课程：第 3 周，第 2 课
-- 当前项目：日志分析 CLI
-- 下一步：第 3 周，第 3 课，Python logging、配置与可靠 I/O
+- 已完成课程：第 3 周，第 4 课，argparse、pathlib 与项目收尾
+- 当前项目：日志分析 CLI（第 3 周阶段已完成）
+- 下一步：完成第 3 周复盘，并准备第 4 周课程
 
 ## 目录
 
@@ -28,4 +28,4 @@ python -m pip install -e ".[dev]"
 python -m pytest -q
 ```
 
-当前共有 21 个 pytest 测试通过，mypy 检查 5 个源文件无错误，Ruff 检查通过。测试套件已从 `unittest.TestCase` 渐进迁移为 pytest 普通函数，并使用 fixture、`tmp_path`、`capsys` 和参数化测试；日志分析器继续支持 `python -m log_analyzer` 与 `log-analyzer` 两种入口，同时保留 `LogSource` 协议、流式读取、确定关闭、CLI 输出与退出码。
+当前共有 30 个 pytest 测试通过，mypy 检查 5 个源文件无错误，Ruff 检查与项目构建通过。日志分析 CLI 已使用 `argparse` 生成帮助和处理参数，文件接口兼容 `str` 与 `pathlib.Path`，并通过隔离 wheel 环境验证 `log-analyzer` 可在项目目录外独立运行。
