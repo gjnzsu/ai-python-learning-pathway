@@ -4,9 +4,9 @@
 
 ## 当前进度
 
-- 已完成课程：第 4 周，第 4 课，探索性数据分析报告与统计直觉
-- 当前成果：`projects/week-04-data/eda_report.ipynb`
-- 下一步：进入第 5 周真实公开数据分析
+- 已完成课程：第 5 周，第 1 课，真实公开数据集、数据来源与数据契约
+- 当前成果：`projects/week-05-bike-sharing/notebooks/01_data_audit.ipynb`
+- 下一步：第 5 周第 2 课，系统化数据清洗与可追踪转换
 
 ## 目录
 
