@@ -4,9 +4,9 @@
 
 ## 当前进度
 
-- 已完成课程：第 5 周，第 1 课，真实公开数据集、数据来源与数据契约
-- 当前成果：`projects/week-05-bike-sharing/notebooks/01_data_audit.ipynb`
-- 下一步：第 5 周第 2 课，系统化数据清洗与可追踪转换
+- 已完成实践：第 5 周，第 2 课，系统化数据清洗与可追踪转换（复盘小测待完成）
+- 当前成果：`projects/week-05-bike-sharing/notebooks/02_data_cleaning.ipynb` 与 `data/processed/hourly_clean.csv`
+- 下一步：完成第 5 周第 2 课复盘小测，再进入第 5 周第 3 课
 
 ## 目录
 
