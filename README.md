@@ -4,9 +4,9 @@
 
 ## 当前进度
 
-- 已完成实践：第 5 周，第 2 课，系统化数据清洗与可追踪转换（复盘小测待完成）
-- 当前成果：`projects/week-05-bike-sharing/notebooks/02_data_cleaning.ipynb` 与 `data/processed/hourly_clean.csv`
-- 下一步：完成第 5 周第 2 课复盘小测，再进入第 5 周第 3 课
+- 当前课程：第 5 周第 3 课进行中，已完成工作日小时曲线与星期 × 小时热力图
+- 当前成果：`projects/week-05-bike-sharing/notebooks/03_group_comparison.ipynb`
+- 下一步：从年份 × 季节编码比较继续，改用“先设计、再编码、最后 Review”的主动学习方式
 
 ## 目录
 
