@@ -1,12 +1,16 @@
 # Python → Machine Learning → AI 学习路径
 
-这是一个面向 Java / Spring Boot 工程师的 12 周 Python 与 AI 学习项目。
+这是一个面向具有 Java / Spring Boot 背景的银行 AI 平台项目经理的 6 周 AI 应用工程核心学习项目。目标是能够理解架构、独立验证小型 AI 原型，并从质量、安全、成本和工程边界参与技术方案 Review。
 
 ## 当前进度
 
-- 当前课程：第 5 周第 3 课进行中，已完成工作日小时曲线与星期 × 小时热力图
+- 当前路线：正在从原 12 周通用路线切换到 6 周 AI 应用工程核心路线
 - 当前成果：`projects/week-05-bike-sharing/notebooks/03_group_comparison.ipynb`
-- 下一步：从年份 × 季节编码比较继续，改用“先设计、再编码、最后 Review”的主动学习方式
+- 下一步：以一个年份 × 季节编码练习收尾数据分析，随后进入可靠的模型 API 调用
+
+完整路线：[6 周 AI 应用工程核心路线](docs/ai-application-core-6-week-roadmap.md)
+
+既有 1–5 周讲义和项目保留为历史成果与查阅资料，不再要求逐课全部完成。
 
 ## 目录
 
