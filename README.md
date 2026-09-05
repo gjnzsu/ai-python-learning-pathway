@@ -6,7 +6,8 @@
 
 - 当前路线：正在从原 12 周通用路线切换到 6 周 AI 应用工程核心路线
 - 当前成果：`projects/week-05-bike-sharing/notebooks/03_group_comparison.ipynb`
-- 下一步：进入 AI API 工程，实现具备输入契约、超时、重试和错误分类的可靠模型 API 调用器
+- 当前课程：[可靠的模型 API 调用器](lessons/ai-core/week-01/lesson-01.md)
+- 下一步：按讲义实现具备输入契约、超时、重试和错误分类的模型 API 调用器
 
 完整路线：[6 周 AI 应用工程核心路线](docs/ai-application-core-6-week-roadmap.md)
 
